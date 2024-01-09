@@ -7,30 +7,45 @@ import {
 import { State, StateMap, assert } from "@proto-kit/protocol";
 import { PublicKey, UInt64 } from "o1js";
 
-interface BalancesConfig {
-  totalSupply: UInt64;
-}
+interface BalancesConfig { }
 
 @runtimeModule()
 export class Balances extends RuntimeModule<BalancesConfig> {
-  @state() public balances = StateMap.from<PublicKey, UInt64>(
+  @state() public balancesBitcoin = StateMap.from<PublicKey, UInt64>(
     PublicKey,
     UInt64
   );
 
-  @state() public circulatingSupply = State.from<UInt64>(UInt64);
+  @state() public balancesDollar = StateMap.from<PublicKey, UInt64>(
+    PublicKey,
+    UInt64
+  );
 
   @runtimeMethod()
-  public addBalance(address: PublicKey, amount: UInt64): void {
-    const circulatingSupply = this.circulatingSupply.get();
-    const newCirculatingSupply = circulatingSupply.value.add(amount);
-    assert(
-      newCirculatingSupply.lessThanOrEqual(this.config.totalSupply),
-      "Circulating supply would be higher than total supply"
-    );
-    this.circulatingSupply.set(newCirculatingSupply);
-    const currentBalance = this.balances.get(address);
-    const newBalance = currentBalance.value.add(amount);
-    this.balances.set(address, newBalance);
+  public addBitcoin(address: PublicKey, amount: UInt64): void {
+    const currentBalance = this.balancesBitcoin.get(address)
+    const newBalance = currentBalance.value.add(amount)
+    this.balancesBitcoin.set(address, newBalance)
+  }
+
+  @runtimeMethod()
+  public addDollar(address: PublicKey, amount: UInt64): void {
+    const currentBalance = this.balancesDollar.get(address)
+    const newBalance = currentBalance.value.add(amount)
+    this.balancesDollar.set(address, newBalance)
+  }
+
+  @runtimeMethod()
+  public subBitcoin(address: PublicKey, amount: UInt64): void {
+    const currentBalance = this.balancesBitcoin.get(address)
+    const newBalance = currentBalance.value.sub(amount)
+    this.balancesBitcoin.set(address, newBalance)
+  }
+
+  @runtimeMethod()
+  public subDollar(address: PublicKey, amount: UInt64): void {
+    const currentBalance = this.balancesDollar.get(address)
+    const newBalance = currentBalance.value.sub(amount)
+    this.balancesDollar.set(address, newBalance)
   }
 }
